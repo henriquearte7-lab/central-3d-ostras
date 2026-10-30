@@ -391,7 +391,7 @@ function vendaCalc(v){let total=0,cust=0,tax=0;(v.itens||[]).forEach(it=>{const 
   const margem=total-cust-tax;return {total,cust,tax,margem,mh:num(v.horas)>0?margem/num(v.horas):null}}
 
 /* ---------- Banco: Planilha Google via Apps Script ---------- */
-const API_URL='';
+const API_URL='https://script.google.com/macros/s/AKfycbywlMxit6uezRQN6guIEeavW5KsqIL_JKDx7rjhTt83XBizOihFicwqHocWpwZ29aCI/exec';
 const COLS=['produtos','vendas','investimentos','testes','propostas'];
 let online=false, booted=false, pin=LS.get('o3d_pin',''), pending=0, lastLoad=0;
 let seq=0;const newId=p=>p+Date.now().toString(36)+(seq++).toString(36)+Math.random().toString(36).slice(2,6);
