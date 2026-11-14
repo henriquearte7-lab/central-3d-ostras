@@ -155,6 +155,29 @@ details.params[open] summary{margin-bottom:10px}
 
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy-deep);color:#fff;padding:10px 16px;border-radius:8px;font-weight:600;z-index:40;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:90vw}
 
+
+/* Portfólio (admin) */
+.pfgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.pfcard{display:flex;flex-direction:column;gap:5px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 8px 12px;cursor:pointer;min-width:0}
+.pfcard:hover{border-color:var(--accent)}
+.pfcard.off{opacity:.6}
+.pfcard b{font-size:14.5px;line-height:1.3}
+.pfmedia{position:relative;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#1f3550}
+.pfmedia img{width:100%;height:100%;object-fit:cover;display:block}
+.pfph{width:100%;height:100%;display:grid;place-items:center;background:linear-gradient(150deg,#2E4B67,#1B2F43)}
+.pfph svg{width:62%;height:auto}
+.pfselo{position:absolute;top:8px;left:8px;background:#E07819;color:#1a1206;font:800 10.5px var(--f-body);text-transform:uppercase;letter-spacing:.04em;padding:3px 7px;border-radius:3px}
+.pfcat{font:700 11px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.pfmeta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mute)}
+.pfphotos{display:flex;flex-wrap:wrap;gap:10px}
+.pfph-it{position:relative;width:96px;height:120px;border-radius:6px;overflow:hidden;background:var(--hover)}
+.pfph-it img{width:100%;height:100%;object-fit:cover}
+.pfph-x{position:absolute;left:4px;right:4px;bottom:4px;display:flex;justify-content:space-between;gap:4px}
+.pfph-x button{width:28px;height:28px;border:0;border-radius:50%;background:rgba(12,30,51,.85);color:#fff;cursor:pointer;font-size:14px}
+.pfcap{background:#E07819;color:#1a1206;font:700 10.5px var(--f-body);padding:4px 6px;border-radius:4px}
+.pfadd{width:96px;height:120px;border:1.5px dashed var(--line);border-radius:6px;background:transparent;color:var(--mute);cursor:pointer;font:600 12.5px var(--f-body);padding:6px}
+.pfadd:hover{border-color:var(--accent);color:var(--accent)}
+.lkrow{border:1px solid var(--line);border-radius:8px;padding:10px}
 /* Propostas */
 .pwrap{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;align-items:start}
 .pwrap>div{min-width:0}
@@ -266,6 +289,8 @@ table.items{width:100%;border-collapse:collapse;font-variant-numeric:tabular-num
       <a href="#propostas">Propostas</a>
       <a href="#vendas">Vendas</a>
       <a href="#produtos">Produtos</a>
+      <a href="#estoque">Estoque</a>
+      <a href="#portfolio">Portfólio</a>
       <a href="#investimento">Investimento</a>
       <a href="#testes">Testes</a>
       <a href="#relatorios">Relatórios</a>
@@ -349,7 +374,7 @@ const EF=[['nome','Nome da empresa'],['slogan','Slogan'],['dados','Dados no cabe
   ['obs','Observações padrão','ta'],['rodapeE','Rodapé (esquerda)','ta'],['rodapeD','Rodapé (direita)','ta']];
 
 /* ---------- Estado ---------- */
-const S={P:{...DP},E:{...DE},produtos:[],vendas:[],investimentos:[],testes:[],propostas:[]};
+const S={P:{...DP},E:{...DE},C:{},produtos:[],vendas:[],investimentos:[],testes:[],propostas:[],estoque:[],movimentos:[],portfolio:[]};
 
 const carga=()=>S.P.cartao+S.P.das+S.P.mkt;
 
@@ -392,7 +417,7 @@ function vendaCalc(v){let total=0,cust=0,tax=0;(v.itens||[]).forEach(it=>{const 
 
 /* ---------- Banco: Planilha Google via Apps Script ---------- */
 const API_URL='https://script.google.com/macros/s/AKfycbywlMxit6uezRQN6guIEeavW5KsqIL_JKDx7rjhTt83XBizOihFicwqHocWpwZ29aCI/exec';
-const COLS=['produtos','vendas','investimentos','testes','propostas'];
+const COLS=['produtos','vendas','investimentos','testes','propostas','estoque','movimentos','portfolio'];
 let online=false, booted=false, pin=LS.get('o3d_pin',''), pending=0, lastLoad=0;
 let seq=0;const newId=p=>p+Date.now().toString(36)+(seq++).toString(36)+Math.random().toString(36).slice(2,6);
 const hora=()=>new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
@@ -403,7 +428,7 @@ async function api(body){
   if(!r.ok)throw new Error('http '+r.status);
   const j=await r.json();if(!j.ok){const e=new Error(j.error);e.code=j.error;throw e}return j;
 }
-function applyAll(d){COLS.forEach(c=>S[c]=d[c]||[]);const cfg=d.config||[];S.P={...DP,...strip(cfg.find(x=>x.id==='params'))};S.E={...DE,...strip(cfg.find(x=>x.id==='empresa'))}}
+function applyAll(d){COLS.forEach(c=>S[c]=d[c]||[]);const cfg=d.config||[];S.P={...DP,...strip(cfg.find(x=>x.id==='params'))};S.E={...DE,...strip(cfg.find(x=>x.id==='empresa'))};S.C={};cfg.forEach(c=>{if(c.id!=='params'&&c.id!=='empresa')S.C[c.id]=strip(c)})}
 function showLock(err){$('#lock').hidden=false;$('#pinErr').hidden=!err;$('#main').innerHTML='';setTimeout(()=>$('#pinIn').focus(),30)}
 async function load(quiet){
   if(pending)return;
@@ -416,9 +441,9 @@ async function load(quiet){
     if(e.code==='pin'){online=false;booted=false;showLock(!!pin);return}
     setSync('off','Sem conexão');if(!quiet){toast('Não consegui falar com a planilha. Confira a internet.');if(!booted)$('#main').innerHTML='<div class="tw"><p class="empty">Sem conexão com a planilha. <button class="btn" id="retry">Tentar de novo</button></p></div>',$('#retry').onclick=()=>load()}}
 }
-function saveLocal(){LS.set('o3d_local',{P:S.P,E:S.E,produtos:S.produtos,vendas:S.vendas,investimentos:S.investimentos,testes:S.testes,propostas:S.propostas})}
+function saveLocal(){const o={P:S.P,E:S.E,C:S.C};COLS.forEach(c=>o[c]=S[c]);LS.set('o3d_local',o)}
 function localMode(){const d=LS.get('o3d_local',null);
-  if(d){Object.assign(S,{P:{...DP,...d.P},E:{...DE,...d.E}});COLS.forEach(c=>S[c]=d[c]||[])}
+  if(d){Object.assign(S,{P:{...DP,...d.P},E:{...DE,...d.E},C:d.C||{}});COLS.forEach(c=>S[c]=d[c]||[])}
   else S.produtos=SEED.map(p=>({...p}));
   setSync('off','Modo de teste · só neste aparelho')}
 async function put(col,id,data){
@@ -439,12 +464,12 @@ async function del(col,id){
   catch(e){pending--;if(old)S[col].push(old);refresh(col);setSync('off','Erro ao excluir');toast('Não foi possível excluir.')}
 }
 async function putCfg(name,data){
-  const prev=name==='params'?S.P:S.E;
-  if(name==='params')S.P={...DP,...data};else S.E={...DE,...data};
+  const prev=name==='params'?S.P:name==='empresa'?S.E:S.C[name];
+  const setc=v=>{if(name==='params')S.P={...DP,...v};else if(name==='empresa')S.E={...DE,...v};else S.C[name]=v};setc(data);
   if(!API_URL){saveLocal();refresh(name);return true}
   pending++;setSync('busy','Salvando…');
   try{await api({action:'set',col:'config',id:name,data});pending--;setSync('on','Salvo às '+hora());refresh(name);return true}
-  catch(e){pending--;if(name==='params')S.P=prev;else S.E=prev;setSync('off','Erro ao salvar');toast('Não foi possível salvar.');return false}
+  catch(e){pending--;if(name==='params'||name==='empresa')setc(prev);else S.C[name]=prev;setSync('off','Erro ao salvar');toast('Não foi possível salvar.');return false}
 }
 setInterval(()=>{if(API_URL&&online&&document.visibilityState==='visible'&&!$('#modal').innerHTML&&Date.now()-lastLoad>30000)load(true)},5000);
 document.addEventListener('visibilitychange',()=>{if(API_URL&&online&&document.visibilityState==='visible'&&Date.now()-lastLoad>10000&&!$('#modal').innerHTML)load(true)});
@@ -517,7 +542,7 @@ function meiRows(ano){
 }
 
 /* ---------- Navegação ---------- */
-const VIEWS={painel:vPainel,calculadora:vCalc,propostas:vPropostas,vendas:vVendas,produtos:vProdutos,investimento:vInvest,testes:vTestes,relatorios:vRelatorios,parametros:vParams};
+const VIEWS={painel:vPainel,calculadora:vCalc,propostas:vPropostas,vendas:vVendas,produtos:vProdutos,estoque:vEstoque,portfolio:vPortfolio,investimento:vInvest,testes:vTestes,relatorios:vRelatorios,parametros:vParams};
 const view=()=>{const h=location.hash.slice(1);return VIEWS[h]?h:'painel'};
 function render(){const v=view();$$('#tabs a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));VIEWS[v]();}
 window.addEventListener('hashchange',()=>{if(API_URL&&!online)return;render();window.scrollTo(0,0)});
@@ -597,6 +622,7 @@ function vPainel(){
     ${k('Comércio',brl(porTipo('Comércio')),'Para a DASN e o relatório mensal.')}
     ${k('Serviço',brl(porTipo('Serviço')))}
   </div></div>
+  ${(()=>{const rep=estRepor(),val=S.estoque.reduce((a,e)=>a+num(e.qtd)*num(e.custo),0);return S.estoque.length?`<div class="sec"><h2>Estoque</h2><div class="kpis">${k('Itens para repor',String(rep.length),rep.length?esc(rep.slice(0,4).map(e=>estNome(e)+' ('+(e.local||'')+')').join(', '))+(rep.length>4?'…':''):'Tudo acima do mínimo.',rep.length?'hl':'')}${k('Valor em estoque',brl(val),S.estoque.length+' itens cadastrados.')}${k('Portfólio na bio',String(S.portfolio.filter(p=>p.visivel!==false).length),'Itens visíveis na página pública.')}</div></div>`:''})()}
   <div class="sec"><h2>Margem por canal</h2>${canais.length?`<div class="tw"><table class="t"><thead><tr><th>Canal</th><th class="r">Orçamentos</th><th class="r">Fechados</th><th class="r">Conversão</th><th class="r">Receita</th><th class="r">Margem</th><th class="r">Horas</th><th class="r">Margem/hora</th></tr></thead><tbody>
     ${canais.map(x=>`<tr><td>${esc(x.c)}</td><td class="r">${x.n}</td><td class="r">${x.f}</td><td class="r">${pct(x.f/x.n)}</td><td class="r">${brl(x.r)}</td><td class="r">${brl(x.m)}</td><td class="r">${nf(x.h)}</td><td class="r"><b>${x.h?brl(x.m/x.h):'—'}</b></td></tr>`).join('')}
     </tbody></table></div><p class="h" style="color:var(--mute);font-size:13px;margin:8px 0 0">O melhor canal é o de maior margem por hora, não o de maior receita. Por isso preencha as horas em cada venda.</p>`:'<div class="tw"><p class="empty">Nenhuma venda lançada. Registre cada orçamento na aba <b>Vendas</b>, inclusive os perdidos, para ver a conversão por canal.</p></div>'}</div>
@@ -963,6 +989,253 @@ function toSale(){
 }
 const propFile=()=>safeName('Proposta '+cur.num.replace(/^Nº\s*/,'')+(cur.cli.empresa?' - '+cur.cli.empresa:''))+'.pdf';
 /* =========================================================
+   ESTOQUE
+   ========================================================= */
+const EST_CATS0=['Filamento','Insumo','Embalagem','Acessório','Componente eletrônico','Ferramenta','Outro'];
+const EST_UNID=['rolo','kg','g','un','m','pacote','caixa','litro'];
+const EST_MAT=['','PLA','PLA Silk','PLA Matte','PETG','ASA','ABS','TPU','Outro'];
+const EST_MOT={'Entrada':['Compra','Devolução','Transferência entre unidades','Outro'],'Saída':['Produção','Venda','Teste','Perda ou defeito','Transferência entre unidades','Outro'],'Ajuste':['Contagem física','Outro']};
+const estCats=()=>{const c=S.C.estoque&&S.C.estoque.categorias;return c&&c.length?c:EST_CATS0};
+const estNome=e=>e.nome+(e.cor&&!String(e.nome).toLowerCase().includes(String(e.cor).toLowerCase())?' · '+e.cor:'');
+const estStatus=e=>num(e.qtd)<=0?['Sem estoque','bad']:(num(e.minimo)>0&&num(e.qtd)<=num(e.minimo)?['Repor','warn']:['OK','good']);
+const estRepor=()=>S.estoque.filter(e=>estStatus(e)[1]!=='good');
+let eFilter='Todos', eLocal='Todos';
+function vEstoque(){
+  const all=S.estoque.slice().sort((a,b)=>String(a.categoria).localeCompare(String(b.categoria))||String(a.nome).localeCompare(String(b.nome))||String(a.local).localeCompare(String(b.local)));
+  let list=eLocal==='Todos'?all:all.filter(e=>e.local===eLocal);
+  const base=list;
+  list=eFilter==='Todos'?list:eFilter==='Repor'?list.filter(e=>estStatus(e)[1]!=='good'):list.filter(e=>e.categoria===eFilter);
+  const valor=base.reduce((a,e)=>a+num(e.qtd)*num(e.custo),0), rep=base.filter(e=>estStatus(e)[1]!=='good');
+  const fil=base.filter(e=>e.categoria==='Filamento'),filU={};fil.forEach(e=>{filU[e.unidade||'un']=(filU[e.unidade||'un']||0)+num(e.qtd)});
+  const cats=estCats().filter(c=>base.some(e=>e.categoria===c));
+  $('#main').innerHTML=offBanner()+head('Estoque','Filamentos e insumos das duas unidades. Toda entrada, saída ou ajuste fica registrada no histórico do item. Itens abaixo do mínimo aparecem em Repor.',
+    '<button class="btn" id="eXls">Exportar Excel</button><button class="btn" id="eCats">Categorias</button><button class="btn" id="eMov">Registrar movimento</button><button class="btn pri" id="eNew">+ Novo item</button>')+
+  `<div class="kpis"><div class="kpi"><span class="l">Itens cadastrados</span><span class="v">${base.length}</span></div>
+   <div class="kpi ${rep.length?'hl':''}"><span class="l">Para repor</span><span class="v">${rep.length}</span><span class="h">${rep.length?esc(rep.slice(0,3).map(estNome).join(', '))+(rep.length>3?'…':''):'Nada abaixo do mínimo.'}</span></div>
+   <div class="kpi"><span class="l">Filamento</span><span class="v">${Object.keys(filU).length?Object.entries(filU).map(([u,q])=>nf(q,1)+' '+u+(q!==1&&u==='rolo'?'s':'')).join(' · '):'—'}</span></div>
+   <div class="kpi"><span class="l">Valor em estoque</span><span class="v">${brl(valor)}</span><span class="h">Quantidade × custo unitário.</span></div></div>
+  <div class="sec"><div class="filters">${['Todos','Repor',...cats].map(s=>`<button data-f="${esc(s)}" class="${s===eFilter?'on':''}">${s==='Repor'?'Para repor':esc(s)} <span class="num">${s==='Todos'?base.length:s==='Repor'?rep.length:base.filter(e=>e.categoria===s).length}</span></button>`).join('')}
+   <label class="btn sm" style="margin-left:auto;gap:8px">Unidade ${sel('eLoc',['Todos',...UNID],eLocal)}</label></div>`+
+  (list.length?`<div class="tw"><table class="t"><thead><tr><th>Item</th><th>Categoria</th><th>Unidade</th><th class="r">Quantidade</th><th class="r">Mínimo</th><th class="r">Custo unit.</th><th class="r">Valor</th><th>Situação</th><th class="c">Movimentar</th></tr></thead><tbody>
+  ${list.map(e=>{const s=estStatus(e);return `<tr class="click" data-id="${e.id}"><td><b>${esc(e.nome)}</b><small>${esc([e.material,e.cor].filter(Boolean).join(' · '))}</small></td><td>${esc(e.categoria)}</td><td>${esc(e.local||'')}</td><td class="r"><b>${nf(e.qtd,2)}</b> ${esc(e.unidade||'')}</td><td class="r">${nf(e.minimo,2)}</td><td class="r">${brl(e.custo)}</td><td class="r">${brl(num(e.qtd)*num(e.custo))}</td><td><span class="chip ${s[1]}">${s[0]}</span></td>
+   <td class="c" style="white-space:nowrap"><button class="btn sm" data-mv="Saída" data-id="${e.id}" aria-label="Registrar saída de ${esc(e.nome)}">− Saída</button> <button class="btn sm" data-mv="Entrada" data-id="${e.id}" aria-label="Registrar entrada de ${esc(e.nome)}">+ Entrada</button></td></tr>`}).join('')}
+  </tbody></table></div><p style="color:var(--mute);font-size:13px">Clique no item para editar ou ver o histórico de movimentos.</p>`
+  :`<div class="tw"><p class="empty">${S.estoque.length?'Nenhum item neste filtro.':'Nenhum item no estoque. Use <b>+ Novo item</b> para cadastrar filamentos, insumos e embalagens.'}</p></div>`)+`</div>`;
+  $('#eNew').onclick=()=>estForm({categoria:'Filamento',unidade:'rolo',local:UNID[0],minimo:1,custo:S.P.filamento});
+  $('#eMov').onclick=()=>movForm(null,'Saída');
+  $('#eCats').onclick=estCatsForm;
+  $('#eXls').onclick=()=>xlsx([{name:'Estoque',rows:rowsEstoque()},{name:'Movimentos',rows:rowsMov()}],'Estoque 3D Ostras '+todayISO()+'.xlsx');
+  $('#eLoc').onchange=e=>{eLocal=e.target.value;vEstoque()};
+  $$('.filters button').forEach(b=>b.onclick=()=>{eFilter=b.dataset.f;vEstoque()});
+  $$('#main [data-mv]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();movForm(S.estoque.find(x=>x.id===b.dataset.id),b.dataset.mv)});
+  $$('#main tr[data-id]').forEach(tr=>tr.onclick=()=>estForm(S.estoque.find(x=>x.id===tr.dataset.id)));
+}
+function estForm(e){
+  const isNew=!e.id;
+  const hist=isNew?[]:S.movimentos.filter(m=>m.item===e.id).sort((a,b)=>String(b.data).localeCompare(String(a.data))||(b.ts||0)-(a.ts||0)).slice(0,20);
+  const cats=estCats().includes(e.categoria)||!e.categoria?estCats():[...estCats(),e.categoria];
+  const mats=EST_MAT.includes(e.material||'')?EST_MAT:[...EST_MAT,e.material];
+  modal(isNew?'Novo item de estoque':'Item de estoque',`<div class="grid">
+    ${fld('e_nome','Nome do item',e.nome||'',{full:true,ph:'Ex.: Filamento preto, Argola de chaveiro, Chip NFC NTAG213'})}
+    ${fld('e_cat','Categoria',e.categoria,{sel:cats})}${fld('e_loc','Unidade',e.local||UNID[0],{sel:UNID})}
+    ${fld('e_mat','Material',e.material||'',{sel:mats.map(m=>[m,m||'—'])})}${fld('e_cor','Cor',e.cor||'',{ph:'Ex.: Preto'})}
+    ${fld('e_un','Unidade de medida',e.unidade||'un',{sel:EST_UNID.includes(e.unidade||'un')?EST_UNID:[...EST_UNID,e.unidade]})}
+    ${isNew?fld('e_qtd','Quantidade atual',e.qtd??'',{dec:1,hint:'Entra como saldo inicial no histórico.'}):`<div class="f"><label>Quantidade atual</label><div style="padding:8px 0;font-weight:700">${nf(e.qtd,2)} ${esc(e.unidade||'')}</div><span class="hint">Para mudar, use Entrada, Saída ou Ajuste.</span></div>`}
+    ${fld('e_min','Estoque mínimo',e.minimo??'',{dec:1,hint:'Abaixo disso o item vai para Repor.'})}
+    ${fld('e_custo','Custo por unidade de medida',e.custo??'',{dec:1,suf:'R$'})}
+    ${fld('e_forn','Fornecedor',e.fornecedor||'',{ph:'Ex.: Loja oficial Bambu Lab'})}
+    ${fld('e_obs','Observação',e.obs||'',{full:true})}
+  </div>${isNew?'':`<fieldset style="margin-top:18px"><legend>Histórico</legend>${hist.length?`<div class="tw"><table class="t"><thead><tr><th>Data</th><th>Movimento</th><th>Motivo</th><th class="r">Qtd</th><th class="r">Saldo</th></tr></thead><tbody>${hist.map(m=>`<tr><td>${fmtDate(m.data)}</td><td>${esc(m.tipo)}</td><td>${esc(m.motivo||'')}${m.obs?`<small>${esc(m.obs)}</small>`:''}</td><td class="r">${m.tipo==='Saída'?'−':m.tipo==='Entrada'?'+':'='}${nf(m.qtd,2)}</td><td class="r">${m.saldo!=null?nf(m.saldo,2):'—'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="empty">Sem movimentos.</p>'}</fieldset>`}`,
+  `${isNew?'':'<button class="btn danger" id="eDel">Excluir</button><button class="btn" id="eAdj">Ajustar contagem</button>'}<span class="sp"></span><button class="btn" data-close>Cancelar</button><button class="btn pri" id="eSave">Salvar</button>`);
+  $('#eSave').onclick=async()=>{
+    const d={nome:v_('e_nome').trim(),categoria:v_('e_cat'),local:v_('e_loc'),material:v_('e_mat'),cor:v_('e_cor').trim(),unidade:v_('e_un'),minimo:num(v_('e_min')),custo:num(v_('e_custo')),fornecedor:v_('e_forn').trim(),obs:v_('e_obs'),qtd:isNew?num(v_('e_qtd')):num(e.qtd)};
+    if(!d.nome){toast('Informe o nome do item.');return}
+    const id=e.id||newId('e');
+    if(!await put('estoque',id,d))return;
+    if(isNew&&d.qtd)await put('movimentos',newId('m'),{item:id,tipo:'Entrada',qtd:d.qtd,data:todayISO(),motivo:'Saldo inicial',obs:'',saldo:d.qtd,ts:Date.now()});
+    closeModal();toast('Item salvo');
+  };
+  if(!isNew){
+    $('#eAdj').onclick=()=>movForm(e,'Ajuste');
+    confirmBtn($('#eDel'),async()=>{await del('estoque',e.id);for(const m of S.movimentos.filter(m=>m.item===e.id))await del('movimentos',m.id);closeModal();toast('Item excluído')});
+  }
+}
+function movForm(e,tipo){
+  const items=S.estoque.slice().sort((a,b)=>estNome(a).localeCompare(estNome(b)));
+  if(!items.length){toast('Cadastre um item primeiro.');return}
+  const opts=items.map(x=>[x.id,estNome(x)+' — '+(x.local||'')]);
+  modal('Registrar movimento',`<div class="grid">
+    ${fld('m_item','Item',e?e.id:items[0].id,{sel:opts,full:true})}
+    ${fld('m_tipo','Tipo',tipo,{sel:[['Entrada','Entrada (chegou)'],['Saída','Saída (usou ou vendeu)'],['Ajuste','Ajuste (contei e o saldo é)']]})}
+    ${fld('m_mot','Motivo','',{sel:EST_MOT[tipo]})}
+    ${fld('m_qtd',tipo==='Ajuste'?'Saldo contado':'Quantidade',tipo==='Ajuste'&&e?nf(e.qtd,2):'1',{dec:1})}
+    ${fld('m_data','Data',todayISO(),{type:'date'})}
+    ${fld('m_obs','Observação','',{full:true,ph:'Ex.: pedido da Clínica X, placa de teste do troféu'})}
+  </div><div id="mInv" style="margin-top:12px"></div><div class="card" id="mPrev" style="margin-top:14px"></div>`,
+  `<span class="sp"></span><button class="btn" data-close>Cancelar</button><button class="btn pri" id="mSave">Registrar</button>`);
+  const cur=()=>S.estoque.find(x=>x.id===v_('m_item'));
+  const novo=()=>{const x=cur(),t=v_('m_tipo'),q=num(v_('m_qtd'));return t==='Entrada'?num(x.qtd)+q:t==='Saída'?num(x.qtd)-q:q};
+  const inv=()=>{const t=v_('m_tipo');$('#mInv').innerHTML=t==='Entrada'?`<label class="check" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="m_inv"> Lançar esta compra em Investimento</label><div class="grid" id="mInvF" hidden style="margin-top:10px">${fld('m_val','Valor pago',n2(num(v_('m_qtd'))*num((cur()||{}).custo)),{dec:1,suf:'R$'})}${fld('m_pag','Quem pagou','Henrique',{sel:PAGOU})}</div>`:'';
+    const c=$('#m_inv');if(c)c.onchange=()=>{$('#mInvF').hidden=!c.checked}};
+  const prev=()=>{const x=cur();if(!x)return;const n=novo();$('#mPrev').innerHTML=`<div class="lines"><div><span>Saldo atual</span><span>${nf(x.qtd,2)} ${esc(x.unidade||'')}</span></div><div class="tot"><span>Saldo depois</span><span style="color:${n<0?'var(--bad)':'inherit'}">${nf(n,2)} ${esc(x.unidade||'')}</span></div></div>`};
+  $('#m_tipo').onchange=()=>{const t=v_('m_tipo');$('#m_mot').innerHTML=EST_MOT[t].map(m=>`<option>${esc(m)}</option>`).join('');$('label[for="m_qtd"]').textContent=t==='Ajuste'?'Saldo contado':'Quantidade';inv();prev()};
+  $('#m_item').onchange=()=>{inv();prev()};$('#m_qtd').oninput=prev;inv();prev();
+  $('#mSave').onclick=async()=>{
+    const x=cur(),t=v_('m_tipo'),q=num(v_('m_qtd'));if(!x)return;if(q<0||(t!=='Ajuste'&&!q)){toast('Informe a quantidade.');return}
+    const n=novo();if(n<0){toast('A saída é maior que o saldo. Confira a quantidade ou faça um ajuste.');return}
+    const data=v_('m_data')||todayISO();
+    if(!await put('movimentos',newId('m'),{item:x.id,tipo:t,qtd:q,data,motivo:v_('m_mot'),obs:v_('m_obs'),saldo:n,ts:Date.now()}))return;
+    await put('estoque',x.id,{...x,qtd:n});
+    const c=$('#m_inv');
+    if(t==='Entrada'&&c&&c.checked&&num(v_('m_val'))>0){const mp={Filamento:'Filamento',Embalagem:'Embalagem',Ferramenta:'Ferramenta',Insumo:'Insumo',Acessório:'Acessório'};
+      await put('investimentos',newId('i'),{data,item:estNome(x)+' ('+nf(q,2)+' '+(x.unidade||'')+')',cat:mp[x.categoria]||'Outro',unid:UNID.includes(x.local)?x.local:'Compartilhado',pagou:v_('m_pag'),valor:num(v_('m_val'))})}
+    closeModal();toast(t+' registrada: '+estNome(x)+' agora tem '+nf(n,2)+' '+(x.unidade||''));
+  };
+}
+function estCatsForm(){
+  let cats=estCats().slice();
+  const render=()=>{$('#catList').innerHTML=cats.map((c,i)=>`<div style="display:flex;gap:6px;align-items:center"><input data-i="${i}" value="${esc(c)}" aria-label="Categoria ${i+1}" style="flex:1;border:1px solid var(--line);background:var(--field);border-radius:7px;padding:8px 10px"><button class="del" data-rm="${i}" aria-label="Remover categoria">×</button></div>`).join('')};
+  modal('Categorias do estoque',`<p style="margin:0 0 10px;color:var(--mute);font-size:14px">Renomear aqui atualiza os itens que usam a categoria. Só é possível remover categoria sem itens.</p><div id="catList" style="display:flex;flex-direction:column;gap:6px"></div><button class="btn sm" id="catAdd" style="margin-top:8px">+ Categoria</button>`,
+    `<span class="sp"></span><button class="btn" data-close>Cancelar</button><button class="btn pri" id="catSave">Salvar</button>`);
+  const orig=cats.slice();render();
+  $('#catList').oninput=ev=>{const i=ev.target.dataset.i;if(i!=null)cats[+i]=ev.target.value};
+  $('#catList').onclick=ev=>{const b=ev.target.closest('[data-rm]');if(!b)return;const i=+b.dataset.rm,nm=orig[i]!=null?orig[i]:cats[i];if(S.estoque.some(e=>e.categoria===nm)){toast('Existem itens em "'+nm+'". Mude a categoria deles antes.');return}cats.splice(i,1);orig.splice(i,1);render()};
+  $('#catAdd').onclick=()=>{cats.push('');orig.push(null);render();$$('#catList input').pop().focus()};
+  $('#catSave').onclick=async()=>{const clean=cats.map(c=>c.trim());if(clean.some(c=>!c)){toast('Preencha ou remova as categorias vazias.');return}
+    if(!await putCfg('estoque',{...(S.C.estoque||{}),categorias:clean}))return;
+    for(let i=0;i<orig.length;i++){if(orig[i]&&orig[i]!==clean[i])for(const e of S.estoque.filter(e=>e.categoria===orig[i]))await put('estoque',e.id,{...e,categoria:clean[i]})}
+    closeModal();toast('Categorias salvas')};
+}
+const rowsEstoque=()=>S.estoque.slice().sort((a,b)=>String(a.categoria).localeCompare(String(b.categoria))||String(a.nome).localeCompare(String(b.nome))).map(e=>({'Item':e.nome,'Categoria':e.categoria,'Material':e.material||'','Cor':e.cor||'','Unidade':e.local||'','Quantidade':num(e.qtd),'Medida':e.unidade||'','Mínimo':num(e.minimo),'Custo unit. (R$)':r2(e.custo),'Valor (R$)':r2(num(e.qtd)*num(e.custo)),'Situação':estStatus(e)[0],'Fornecedor':e.fornecedor||'','Observação':e.obs||''}));
+const rowsMov=()=>S.movimentos.slice().sort((a,b)=>String(a.data).localeCompare(String(b.data))||(a.ts||0)-(b.ts||0)).map(m=>{const e=S.estoque.find(x=>x.id===m.item);return {'Data':fmtDate(m.data),'Item':e?estNome(e):'(item excluído)','Unidade':e?e.local:'','Tipo':m.tipo,'Motivo':m.motivo||'','Quantidade':num(m.qtd),'Saldo depois':m.saldo!=null?num(m.saldo):'','Observação':m.obs||''}});
+
+/* =========================================================
+   PORTFÓLIO (página pública da bio)
+   ========================================================= */
+const PUB_URL=location.origin+location.pathname.replace(/[^/]*$/,'')+'catalogo/';
+const ICONES=[['trofeu','Troféu'],['medalha','Medalha'],['kimono','Kimono'],['chaveiro','Chaveiro'],['placa','Placa de mesa'],['nfc','Display NFC'],['tag','Tag']];
+const VIT0={marca:'3D Ostras',assinatura:'Soluções tridimensionais',slogan:'Onde ideias ganham forma.',intro:'',whatsapp:'',instagram:'3dostras',cidade:'Rio das Ostras, RJ',links:[],categorias:[]};
+const vit=()=>({...VIT0,...(S.C.vitrine||{})});
+const fotoUrl=(id,w=1000)=>'https://lh3.googleusercontent.com/d/'+id+'=w'+w;
+const fotoTag=(id,alt,w)=>`<img src="${fotoUrl(id,w)}" alt="${esc(alt)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://drive.google.com/thumbnail?id=${esc(id)}&sz=w${w||1000}'">`;
+function artSvg(kind){
+  var P="#D7D9DA",O="#E07819",g='fill="none" stroke="'+P+'" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"',b="";
+  if(kind==="kimono") b='<g '+g+'><path d="M64 74L88 60 100 84 112 60 136 74 146 150H54Z"/><path d="M88 60l12 58 12-58"/><path d="M64 74L42 118l14 7 10-24"/><path d="M136 74l22 44-14 7-10-24"/><path d="M46 158h108l6 40H40Z"/><path d="M70 180h60" opacity=".5"/></g><rect x="55" y="126" width="90" height="12" fill="'+O+'"/><path d="M100 138l-9 22M100 138l9 22" stroke="'+O+'" stroke-width="6" stroke-linecap="round"/>';
+  else if(kind==="trofeu") b='<g '+g+'><path d="M70 46h60v44c0 24-14 38-30 38s-30-14-30-38Z"/><path d="M70 58H50c0 26 10 36 24 38"/><path d="M130 58h20c0 26-10 36-24 38"/><path d="M100 128v22"/><path d="M78 150h44l6 16H72Z"/><path d="M58 166h84v36H58Z"/><path d="M80 184h40" opacity=".5"/></g><path d="M100 64l6 13 14 2-10 10 2 14-12-7-12 7 2-14-10-10 14-2Z" fill="'+O+'"/>';
+  else if(kind==="medalha") b='<path d="M74 34l26 66 26-66" fill="none" stroke="'+O+'" stroke-width="12" stroke-linejoin="round"/><g '+g+'><circle cx="100" cy="146" r="46"/><circle cx="100" cy="146" r="33" stroke-dasharray="6 6" opacity=".6"/></g><path d="M100 124l7 14 15 2-11 11 3 15-14-7-14 7 3-15-11-11 15-2Z" fill="'+O+'"/>';
+  else if(kind==="placa") b='<g '+g+'><path d="M36 176l22-70h84l22 70Z"/><path d="M36 176h128v14H36Z"/><path d="M80 146h56"/><path d="M80 160h40" opacity=".5"/></g><path d="M68 132l-10 6v12l10 6 10-6v-12Z" fill="'+O+'"/>';
+  else if(kind==="nfc") b='<g '+g+'><path d="M60 40h80l6 6v118H54V46Z"/><path d="M46 174h108l-8 24H54Z"/><rect x="82" y="134" width="36" height="20" opacity=".5"/></g><g fill="none" stroke="'+O+'" stroke-width="5" stroke-linecap="round"><path d="M100 84a14 14 0 010 22"/><path d="M110 74a28 28 0 010 42"/><path d="M120 64a42 42 0 010 62"/></g><circle cx="88" cy="95" r="6" fill="'+O+'"/>';
+  else if(kind==="tag") b='<g '+g+'><path d="M72 50h56l18 22v128H54V72Z"/><circle cx="100" cy="76" r="9"/><path d="M76 176h48" opacity=".5"/><path d="M84 188h32" opacity=".5"/></g><g fill="none" stroke="'+O+'" stroke-width="5" stroke-linecap="round"><path d="M100 116a12 12 0 010 20"/><path d="M110 108a24 24 0 010 36"/><path d="M120 100a36 36 0 010 52"/></g><circle cx="90" cy="126" r="5" fill="'+O+'"/>';
+  else b='<circle cx="100" cy="46" r="18" fill="none" stroke="'+P+'" stroke-width="4"/><g '+g+'><path d="M100 64v18"/><path d="M76 82h48l8 8v104l-8 8H76l-8-8V90Z"/></g><rect x="68" y="160" width="64" height="18" fill="'+O+'"/>';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 250" aria-hidden="true">'+b+'</svg>';
+}
+const pfThumb=(p,w)=>p.fotos&&p.fotos.length?fotoTag(p.fotos[0],p.nome,w||600):`<div class="pfph">${artSvg(p.icone)}</div>`;
+let pfCat='Todos';
+function vPortfolio(){
+  const V=vit(),cats=V.categorias||[];
+  const all=S.portfolio.slice().sort((a,b)=>num(a.ordem)-num(b.ordem)||String(a.nome).localeCompare(String(b.nome)));
+  const list=pfCat==='Todos'?all:pfCat==='Ocultos'?all.filter(p=>p.visivel===false):all.filter(p=>p.categoria===pfCat);
+  const vis=all.filter(p=>p.visivel!==false).length;
+  $('#main').innerHTML=offBanner()+head('Portfólio da bio','É o catálogo público do link da bio do Instagram. O que você muda aqui aparece na página em até um minuto. Itens ocultos ficam guardados, mas não aparecem.',
+    `<button class="btn" id="pfCfg">Página e links</button><button class="btn" id="pfXls">Exportar Excel</button><button class="btn pri" id="pfNew">+ Novo item</button>`)+
+  `<div class="card" style="display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-bottom:16px"><div style="flex:1;min-width:0"><div style="font:700 12px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)">Link para a bio</div><div style="font-weight:600;word-break:break-all" id="pfUrl">${esc(PUB_URL)}</div><div style="color:var(--mute);font-size:13px">${vis} ${vis===1?'item visível':'itens visíveis'} · ${(V.links||[]).length} botões no topo · WhatsApp ${esc(V.whatsapp||'não definido')}</div></div>
+   <button class="btn" id="pfCopy">Copiar link</button><a class="btn pri" href="${esc(PUB_URL)}" target="_blank" rel="noopener">Abrir página pública</a></div>
+  <div class="filters">${['Todos',...cats.map(c=>c.id),'Ocultos'].map(id=>{const c=cats.find(x=>x.id===id);const n=id==='Todos'?all.length:id==='Ocultos'?all.length-vis:all.filter(p=>p.categoria===id).length;return `<button data-f="${esc(id)}" class="${id===pfCat?'on':''}">${esc(c?c.nome:id)} <span class="num">${n}</span></button>`}).join('')}</div>`+
+  (list.length?`<div class="pfgrid">${list.map(p=>{const c=cats.find(x=>x.id===p.categoria);return `<button class="pfcard${p.visivel===false?' off':''}" data-id="${p.id}"><div class="pfmedia">${pfThumb(p)}${p.selo?`<span class="pfselo">${esc(p.selo)}</span>`:''}</div><span class="pfcat">${esc(c?c.nome:'Sem categoria')}</span><b>${esc(p.nome)}</b><span class="pfmeta">${p.visivel===false?'<span class="chip">Oculto</span>':'<span class="chip good">Visível</span>'} <span>${(p.fotos||[]).length} foto${(p.fotos||[]).length===1?'':'s'}</span>${p.code?` <span class="chip info">${esc(p.code)}</span>`:''}</span></button>`}).join('')}</div>`
+  :`<div class="tw"><p class="empty">${all.length?'Nenhum item neste filtro.':'O portfólio está vazio. Use <b>+ Novo item</b> para adicionar o primeiro modelo.'}</p></div>`);
+  $('#pfNew').onclick=()=>pfForm({categoria:(cats[0]||{}).id||'',icone:'trofeu',visivel:true,ordem:(all.reduce((a,p)=>Math.max(a,num(p.ordem)),0)+1),fotos:[],preco:'Sob consulta'});
+  $('#pfCfg').onclick=vitForm;
+  $('#pfXls').onclick=()=>xlsx([{name:'Portfólio',rows:rowsPort()}],'Portfolio 3D Ostras '+todayISO()+'.xlsx');
+  $('#pfCopy').onclick=async()=>{try{await navigator.clipboard.writeText(PUB_URL);toast('Link copiado')}catch(_){const r=document.createRange();r.selectNodeContents($('#pfUrl'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Link selecionado. Copie com Ctrl+C.')}};
+  $$('.filters button').forEach(b=>b.onclick=()=>{pfCat=b.dataset.f;vPortfolio()});
+  $$('#main .pfcard').forEach(b=>b.onclick=()=>pfForm(JSON.parse(JSON.stringify(S.portfolio.find(p=>p.id===b.dataset.id)))));
+}
+function resizeImg(file,max){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const s=Math.min(1,(max||1400)/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);const cx=c.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,c.width,c.height);cx.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);res(c.toDataURL('image/jpeg',.85).split(',')[1])};img.onerror=()=>rej(new Error('img'));img.src=URL.createObjectURL(file)})}
+function pfForm(p){
+  const isNew=!p.id,V=vit(),cats=(V.categorias||[]).map(c=>[c.id,c.nome]);if(!cats.length)cats.push(['','Sem categoria']);
+  const novas=[], removidas=[];p.fotos=p.fotos||[];
+  const lines=a=>(a||[]).join('\n'), toArr=t=>String(t||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  const prodOpts=[['','— nenhum —'],...S.produtos.slice().sort((a,b)=>String(a.code).localeCompare(b.code)).map(x=>[x.code,x.code+' · '+x.nome])];
+  const bg=modal(isNew?'Novo item do portfólio':'Item do portfólio',`<div class="grid">
+    ${fld('pf_nome','Nome',p.nome||'',{full:true,ph:'Ex.: Troféu Destaque do Ano'})}
+    ${fld('pf_cat','Categoria',p.categoria||'',{sel:cats})}${fld('pf_selo','Selo no card',p.selo||'',{ph:'Ex.: Mais pedido, Novo, B2B'})}
+    ${fld('pf_cham','Chamada',p.chamada||'',{full:true,ph:'Uma frase de efeito',hint:'Aparece em destaque no detalhe.'})}
+    ${fld('pf_sub','Resumo do card',p.subtitulo||'',{full:true,hint:'Duas linhas no card da página.'})}
+    ${fld('pf_desc','Descrição',p.descricao||'',{ta:1,full:true})}
+    ${fld('pf_ben','Benefícios (um por linha)',lines(p.beneficios),{ta:1})}${fld('pf_pers','O que dá para personalizar (um por linha)',lines(p.personalizacao),{ta:1})}
+    ${fld('pf_specs','Especificações (uma por linha)',lines(p.specs),{ta:1})}
+    <div class="f" style="gap:12px">${fld('pf_prazo','Prazo',p.prazo||'',{ph:'Ex.: 5 a 7 dias úteis'})}${fld('pf_preco','Preço exibido',p.preco||'',{ph:'Ex.: Sob consulta ou A partir de R$ 15'})}</div>
+    ${fld('pf_icone','Ilustração quando não há foto',p.icone||'trofeu',{sel:ICONES})}${fld('pf_ordem','Ordem na página',p.ordem??'',{dec:1,hint:'Menor aparece primeiro.'})}
+    ${fld('pf_code','Produto da esteira (interno)',p.code||'',{sel:prodOpts,hint:'Só para você: mostra custo e preço sugerido. Não aparece na página.'})}
+    <div class="f"><label>Na página pública</label><label style="display:flex;gap:8px;align-items:center;padding:8px 0;font-weight:600"><input type="checkbox" id="pf_vis"${p.visivel!==false?' checked':''}> Visível</label></div>
+  </div>
+  <fieldset style="margin-top:18px"><legend>Fotos</legend><p style="margin:-4px 0 10px;color:var(--mute);font-size:13px">A primeira foto é a capa. Fotos são reduzidas e guardadas na pasta do portfólio no seu Google Drive.</p>
+   <div class="pfphotos" id="pfPh"></div><input type="file" id="pfFile" accept="image/*" multiple hidden></fieldset>
+  <div class="card" id="pfInfo" style="margin-top:14px"></div>`,
+  `${isNew?'':'<button class="btn danger" id="pfDel">Excluir</button>'}<a class="btn" href="${esc(PUB_URL)}${isNew?'':'#'+esc(p.id)}" target="_blank" rel="noopener">Ver na página</a><span class="sp"></span><button class="btn" id="pfCancel">Cancelar</button><button class="btn pri" id="pfSave">Salvar</button>`);
+  const phRender=()=>{$('#pfPh').innerHTML=p.fotos.map((id,i)=>`<div class="pfph-it">${fotoTag(id,'Foto '+(i+1),300)}<div class="pfph-x">${i?`<button type="button" data-cap="${i}" title="Usar como capa">★</button>`:'<span class="pfcap">Capa</span>'}<button type="button" data-rm="${i}" aria-label="Remover foto">×</button></div></div>`).join('')+`<button type="button" class="pfadd" id="pfAdd">+ Adicionar fotos</button>`;
+    $('#pfAdd').onclick=()=>{if(!API_URL){toast('Fotos só funcionam com a planilha conectada.');return}$('#pfFile').click()}};
+  const info=()=>{const x=S.produtos.find(q=>q.code===v_('pf_code'));$('#pfInfo').hidden=!x;if(x){const c=prodCost(x);$('#pfInfo').innerHTML=`<div class="lines"><div><span>Custo com refugo (${esc(x.code)})</span><span>${brl(c.unit)}</span></div><div><span>Preço sugerido</span><span>${brl(c.preco)}</span></div><div><span>Preço praticado</span><span>${num(x.preco)?brl(x.preco):'—'}</span></div></div>`}};
+  phRender();info();$('#pf_code').onchange=info;
+  $('#pfPh').onclick=ev=>{const c=ev.target.closest('[data-cap]'),r=ev.target.closest('[data-rm]');
+    if(c){const i=+c.dataset.cap;p.fotos.unshift(p.fotos.splice(i,1)[0]);phRender()}
+    if(r){const i=+r.dataset.rm;removidas.push(p.fotos.splice(i,1)[0]);phRender()}};
+  $('#pfFile').onchange=async ev=>{const files=[...ev.target.files];ev.target.value='';
+    for(const f of files){const add=$('#pfAdd');add.disabled=true;add.textContent='Enviando '+(files.indexOf(f)+1)+' de '+files.length+'…';
+      try{const data=await resizeImg(f,1400);const j=await api({action:'upload',name:f.name.replace(/\.[^.]+$/,'')+'.jpg',mime:'image/jpeg',data});p.fotos.push(j.file.id);novas.push(j.file.id);phRender()}
+      catch(e){console.warn(e);toast('Não foi possível enviar '+f.name+'.');phRender()}}};
+  const trash=ids=>ids.forEach(id=>api({action:'trash',id}).catch(()=>{}));
+  $('#pfCancel').onclick=()=>{trash(novas);closeModal()};
+  bg.addEventListener('click',e=>{if(e.target===bg||e.target.closest('.mhead [data-close]'))trash(novas)},true);
+  $('#pfSave').onclick=async()=>{
+    const d={nome:v_('pf_nome').trim(),categoria:v_('pf_cat'),selo:v_('pf_selo').trim(),chamada:v_('pf_cham').trim(),subtitulo:v_('pf_sub').trim(),descricao:v_('pf_desc').trim(),
+      beneficios:toArr(v_('pf_ben')),personalizacao:toArr(v_('pf_pers')),specs:toArr(v_('pf_specs')),prazo:v_('pf_prazo').trim(),preco:v_('pf_preco').trim(),icone:v_('pf_icone'),ordem:num(v_('pf_ordem')),
+      code:v_('pf_code'),visivel:$('#pf_vis').checked,fotos:p.fotos.slice(),hashtags:p.hashtags||[]};
+    if(!d.nome){toast('Informe o nome.');return}
+    const id=p.id||('pf-'+d.nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)+'-'+Date.now().toString(36).slice(-4));
+    if(await put('portfolio',id,d)){trash(removidas);closeModal();toast(d.visivel?'Salvo. Já aparece na página pública.':'Salvo como oculto.')}};
+  if(!isNew)confirmBtn($('#pfDel'),async()=>{await del('portfolio',p.id);trash(p.fotos.concat(removidas));closeModal();toast('Item excluído')});
+}
+function vitForm(){
+  const V=JSON.parse(JSON.stringify(vit()));V.links=V.links||[];V.categorias=V.categorias||[];
+  const TIPOS=[['whatsapp','WhatsApp (mensagem pronta)'],['catalogo','Ir para o catálogo'],['instagram','Instagram'],['link','Outro link (https://…)']];
+  const linksHTML=()=>V.links.map((l,i)=>`<div class="lkrow" data-i="${i}"><div class="grid">
+     <div class="f"><label>Texto do botão</label><input data-k="rotulo" value="${esc(l.rotulo||'')}"></div>
+     <div class="f"><label>Linha de apoio</label><input data-k="sub" value="${esc(l.sub||'')}"></div>
+     <div class="f"><label>Ação</label>${sel('lk_t'+i,TIPOS,l.tipo||'whatsapp','data-k="tipo"')}</div>
+     <div class="f"><label>${l.tipo==='link'?'Endereço':l.tipo==='whatsapp'?'Mensagem pronta':'—'}</label><input data-k="valor" value="${esc(l.valor||'')}"${l.tipo==='catalogo'||l.tipo==='instagram'?' disabled':''}></div></div>
+     <div style="display:flex;gap:6px;margin-top:6px;align-items:center"><label style="display:flex;gap:6px;align-items:center;font-size:13.5px"><input type="checkbox" data-k="destaque"${l.destaque?' checked':''}> Botão em destaque (laranja)</label><span style="flex:1"></span>
+     <button type="button" class="btn sm" data-up="${i}" aria-label="Subir">↑</button><button type="button" class="btn sm" data-dn="${i}" aria-label="Descer">↓</button><button type="button" class="btn sm danger" data-rm="${i}">Remover</button></div></div>`).join('');
+  const catsHTML=()=>V.categorias.map((c,i)=>`<div style="display:flex;gap:6px;align-items:center"><input data-ci="${i}" value="${esc(c.nome)}" aria-label="Categoria ${i+1}" style="flex:1;border:1px solid var(--line);background:var(--field);border-radius:7px;padding:8px 10px"><button type="button" class="del" data-crm="${i}" aria-label="Remover categoria">×</button></div>`).join('');
+  modal('Página e links da bio',`<fieldset><legend>Topo da página</legend><div class="grid">
+    ${fld('vt_marca','Marca',V.marca)}${fld('vt_ass','Assinatura',V.assinatura)}
+    ${fld('vt_slogan','Título',V.slogan,{full:true})}${fld('vt_intro','Texto de apresentação',V.intro,{ta:1,full:true})}
+    ${fld('vt_wa','WhatsApp (com DDD)',V.whatsapp,{ph:'22999047056',hint:'Só números. Usado em todos os botões de orçamento.'})}${fld('vt_ig','Instagram (sem @)',V.instagram)}${fld('vt_cid','Cidade',V.cidade)}
+  </div></fieldset>
+  <fieldset><legend>Botões do topo</legend><div id="lkList" style="display:flex;flex-direction:column;gap:10px"></div><button type="button" class="btn sm" id="lkAdd" style="margin-top:8px">+ Botão</button></fieldset>
+  <fieldset><legend>Categorias</legend><p style="margin:-4px 0 8px;color:var(--mute);font-size:13px">Só é possível remover categoria sem itens.</p><div id="vcList" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" class="btn sm" id="vcAdd" style="margin-top:8px">+ Categoria</button></fieldset>`,
+  `<span class="sp"></span><button class="btn" data-close>Cancelar</button><button class="btn pri" id="vtSave">Salvar</button>`);
+  const rl=()=>{$('#lkList').innerHTML=linksHTML()},rc=()=>{$('#vcList').innerHTML=catsHTML()};rl();rc();
+  $('#lkList').addEventListener('input',ev=>{const r=ev.target.closest('.lkrow');if(!r)return;const l=V.links[+r.dataset.i],k=ev.target.dataset.k;if(k==='destaque')l.destaque=ev.target.checked;else if(k&&k!=='tipo')l[k]=ev.target.value});
+  $('#lkList').addEventListener('change',ev=>{const r=ev.target.closest('.lkrow');if(!r||ev.target.dataset.k!=='tipo')return;V.links[+r.dataset.i].tipo=ev.target.value;rl()});
+  $('#lkList').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;const L=V.links;
+    if(b.dataset.rm!=null){L.splice(+b.dataset.rm,1);rl()}
+    if(b.dataset.up!=null){const i=+b.dataset.up;if(i>0){[L[i-1],L[i]]=[L[i],L[i-1]];rl()}}
+    if(b.dataset.dn!=null){const i=+b.dataset.dn;if(i<L.length-1){[L[i+1],L[i]]=[L[i],L[i+1]];rl()}}});
+  $('#lkAdd').onclick=()=>{V.links.push({rotulo:'',sub:'',tipo:'whatsapp',valor:'Olá! Vim pelo Instagram da 3D Ostras.',destaque:false});rl()};
+  $('#vcList').addEventListener('input',ev=>{const i=ev.target.dataset.ci;if(i!=null)V.categorias[+i].nome=ev.target.value});
+  $('#vcList').addEventListener('click',ev=>{const b=ev.target.closest('[data-crm]');if(!b)return;const c=V.categorias[+b.dataset.crm];if(S.portfolio.some(p=>p.categoria===c.id)){toast('Existem itens em "'+c.nome+'". Mude a categoria deles antes.');return}V.categorias.splice(+b.dataset.crm,1);rc()});
+  $('#vcAdd').onclick=()=>{V.categorias.push({id:'c'+Date.now().toString(36),nome:''});rc();$$('#vcList input').pop().focus()};
+  $('#vtSave').onclick=async()=>{
+    if(V.categorias.some(c=>!c.nome.trim())){toast('Preencha ou remova as categorias vazias.');return}
+    if(V.links.some(l=>!String(l.rotulo||'').trim())){toast('Todo botão precisa de um texto.');return}
+    const d={...V,marca:v_('vt_marca').trim(),assinatura:v_('vt_ass').trim(),slogan:v_('vt_slogan').trim(),intro:v_('vt_intro').trim(),whatsapp:v_('vt_wa').replace(/\D/g,''),instagram:v_('vt_ig').replace(/^@/,'').trim(),cidade:v_('vt_cid').trim(),
+      categorias:V.categorias.map(c=>({id:c.id,nome:c.nome.trim()}))};
+    if(await putCfg('vitrine',d)){closeModal();toast('Página atualizada')}};
+}
+const rowsPort=()=>S.portfolio.slice().sort((a,b)=>num(a.ordem)-num(b.ordem)).map(p=>{const c=(vit().categorias||[]).find(x=>x.id===p.categoria);return {'Ordem':num(p.ordem),'Nome':p.nome,'Categoria':c?c.nome:'','Visível':p.visivel===false?'Não':'Sim','Selo':p.selo||'','Chamada':p.chamada||'','Resumo':p.subtitulo||'','Descrição':p.descricao||'','Benefícios':(p.beneficios||[]).join(' | '),'Personalização':(p.personalizacao||[]).join(' | '),'Especificações':(p.specs||[]).join(' | '),'Prazo':p.prazo||'','Preço':p.preco||'','Fotos':(p.fotos||[]).length,'Produto (esteira)':p.code||''}});
+
+/* =========================================================
    RELATÓRIOS
    ========================================================= */
 const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
@@ -1006,6 +1279,7 @@ function excelCompleto(){
   xlsx([{name:'Vendas',rows:rowsVendas(vs)},{name:'Itens vendidos',rows:rowsItens(vs)},{name:'Produtos',rows:rowsProdutos()},{name:'Propostas',rows:rowsProps()},
     {name:'Investimento',rows:rowsInv()},{name:'Testes',rows:rowsTestes()},
     {name:'Receitas MEI '+S.P.ano,rows:meiRows(String(S.P.ano)).map(r=>({'Mês':r.m,'Comércio com nota (R$)':r2(r.cc),'Comércio sem nota (R$)':r2(r.cs),'Serviço com nota (R$)':r2(r.sc),'Serviço sem nota (R$)':r2(r.ss),'Total (R$)':r2(r.t),'Acumulado (R$)':r2(r.acc)}))},
+    {name:'Estoque',rows:rowsEstoque()},{name:'Movimentos de estoque',rows:rowsMov()},{name:'Portfólio',rows:rowsPort()},
     {name:'Parâmetros',rows:rowsParams()}],'Central 3D Ostras - dados completos '+todayISO()+'.xlsx');
 }
 function repHeader(title,sub){const E=S.E;return `<img class="wm" src="${LOGO}" alt=""><section class="hd"><img src="${LOGO}" alt=""><div><h2>${esc(E.nome)}</h2><div class="tag">${esc(E.slogan)}</div></div>
